@@ -1567,98 +1567,99 @@ def setup_routes():
     # API: 版本检查
     @app.post("/api/version/check", response_class=JSONResponse)
     async def api_version_check(request: Request):
-        try:
-            # 获取请求数据
-            data = await request.json()
-            current_version = data.get("current_version", "")
+        # try:
+        #     # 获取请求数据
+        #     data = await request.json()
+        #     current_version = data.get("current_version", "")
 
-            # 请求插件管理后台服务器检查更新
-            try:
-                # 打印请求URL以便调试
-                url = f"{PLUGIN_MARKET_API['BASE_URL']}/version/check"
-                logger.info(f"正在请求版本检查: {url}")
+        #     # 请求插件管理后台服务器检查更新
+        #     try:
+        #         # 打印请求URL以便调试
+        #         url = f"{PLUGIN_MARKET_API['BASE_URL']}/version/check"
+        #         logger.info(f"正在请求版本检查: {url}")
 
-                # 使用requests库而不是aiohttp
-                import requests
-                # 禁用SSL验证警告
-                import urllib3
-                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+        #         # 使用requests库而不是aiohttp
+        #         import requests
+        #         # 禁用SSL验证警告
+        #         import urllib3
+        #         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-                response = requests.post(
-                    url,
-                    json={"current_version": current_version},
-                    timeout=5,
-                    verify=False  # 禁用SSL验证
-                )
+        #         response = requests.post(
+        #             url,
+        #             json={"current_version": current_version},
+        #             timeout=5,
+        #             verify=False  # 禁用SSL验证
+        #         )
 
-                # 检查响应状态
-                if response.status_code == 200:
-                    # 解析响应数据
-                    result = response.json()
-                    latest_version = result.get("latest_version", "")
+        #         # 检查响应状态
+        #         if response.status_code == 200:
+        #             # 解析响应数据
+        #             result = response.json()
+        #             latest_version = result.get("latest_version", "")
 
-                    # 检查版本是否相同
-                    if latest_version == current_version:
-                        # 如果版本相同，则设置为没有更新可用
-                        result["update_available"] = False
+        #             # 检查版本是否相同
+        #             if latest_version == current_version:
+        #                 # 如果版本相同，则设置为没有更新可用
+        #                 result["update_available"] = False
 
-                        # 更新本地版本信息文件
-                        try:
-                            version_file = os.path.join(os.path.dirname(current_dir), "version.json")
-                            version_info = get_version_info()
-                            version_info["update_available"] = False
-                            version_info["last_check"] = datetime.now().isoformat()
+        #                 # 更新本地版本信息文件
+        #                 try:
+        #                     version_file = os.path.join(os.path.dirname(current_dir), "version.json")
+        #                     version_info = get_version_info()
+        #                     version_info["update_available"] = False
+        #                     version_info["last_check"] = datetime.now().isoformat()
 
-                            with open(version_file, "w", encoding="utf-8") as f:
-                                json.dump(version_info, f, ensure_ascii=False, indent=2)
+        #                     with open(version_file, "w", encoding="utf-8") as f:
+        #                         json.dump(version_info, f, ensure_ascii=False, indent=2)
 
-                            logger.info(f"更新版本信息文件成功: {version_file}")
-                        except Exception as e:
-                            logger.error(f"更新版本信息文件失败: {e}")
-                    # 如果有更新且版本不同
-                    elif result.get("update_available", False):
-                        try:
-                            version_file = os.path.join(os.path.dirname(current_dir), "version.json")
-                            version_info = get_version_info()
-                            version_info["update_available"] = True
-                            version_info["latest_version"] = latest_version
-                            version_info["update_url"] = result.get("update_url", "")
-                            version_info["update_description"] = result.get("update_description", "")
-                            version_info["last_check"] = datetime.now().isoformat()
+        #                     logger.info(f"更新版本信息文件成功: {version_file}")
+        #                 except Exception as e:
+        #                     logger.error(f"更新版本信息文件失败: {e}")
+        #             # 如果有更新且版本不同
+        #             elif result.get("update_available", False):
+        #                 try:
+        #                     version_file = os.path.join(os.path.dirname(current_dir), "version.json")
+        #                     version_info = get_version_info()
+        #                     version_info["update_available"] = True
+        #                     version_info["latest_version"] = latest_version
+        #                     version_info["update_url"] = result.get("update_url", "")
+        #                     version_info["update_description"] = result.get("update_description", "")
+        #                     version_info["last_check"] = datetime.now().isoformat()
 
-                            with open(version_file, "w", encoding="utf-8") as f:
-                                json.dump(version_info, f, ensure_ascii=False, indent=2)
+        #                     with open(version_file, "w", encoding="utf-8") as f:
+        #                         json.dump(version_info, f, ensure_ascii=False, indent=2)
 
-                            logger.info(f"更新版本信息文件成功: {version_file}")
-                        except Exception as e:
-                            logger.error(f"更新版本信息文件失败: {e}")
+        #                     logger.info(f"更新版本信息文件成功: {version_file}")
+        #                 except Exception as e:
+        #                     logger.error(f"更新版本信息文件失败: {e}")
 
-                    return result
-                else:
-                    # 如果响应状态不是200，返回错误
-                    return {"success": False, "error": f"服务器返回错误状态码: {response.status_code}"}
-            except Exception as e:
-                logger.error(f"连接版本检查服务器失败: {e}")
+        #             return result
+        #         else:
+        #             # 如果响应状态不是200，返回错误
+        #             return {"success": False, "error": f"服务器返回错误状态码: {response.status_code}"}
+        #     except Exception as e:
+        #         logger.error(f"连接版本检查服务器失败: {e}")
 
-            # 如果无法连接到服务器，返回本地版本信息
-            version_info = get_version_info()
+        #     # 如果无法连接到服务器，返回本地版本信息
+        #     version_info = get_version_info()
 
-            # 检查本地存储的版本是否与当前版本相同
-            if version_info.get("latest_version", "") == current_version:
-                version_info["update_available"] = False
+        #     # 检查本地存储的版本是否与当前版本相同
+        #     if version_info.get("latest_version", "") == current_version:
+        #         version_info["update_available"] = False
 
-                # 更新本地版本信息文件
-                try:
-                    version_file = os.path.join(os.path.dirname(current_dir), "version.json")
-                    with open(version_file, "w", encoding="utf-8") as f:
-                        json.dump(version_info, f, ensure_ascii=False, indent=2)
-                except Exception as e:
-                    logger.error(f"更新版本信息文件失败: {e}")
+        #         # 更新本地版本信息文件
+        #         try:
+        #             version_file = os.path.join(os.path.dirname(current_dir), "version.json")
+        #             with open(version_file, "w", encoding="utf-8") as f:
+        #                 json.dump(version_info, f, ensure_ascii=False, indent=2)
+        #         except Exception as e:
+        #             logger.error(f"更新版本信息文件失败: {e}")
 
-            return version_info
-        except Exception as e:
-            logger.error(f"版本检查失败: {e}")
-            return {"success": False, "error": f"版本检查失败: {e}"}
+        #     return version_info
+        # except Exception as e:
+        #     logger.error(f"版本检查失败: {e}")
+        #     return {"success": False, "error": f"版本检查失败: {e}"}
+        pass
 
     # API: 版本更新
     @app.post("/api/version/update", response_class=JSONResponse)
