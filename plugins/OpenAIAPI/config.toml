@@ -25,7 +25,7 @@ command-tip = """-----OpenAI API-----
 trigger_prefix = "/ai"                  # 触发前缀，群聊中必须使用此前缀
 private_chat_all = true                # 是否在私聊中处理所有消息，设为true会响应所有私聊消息
 max_context_messages = 15               # 最大上下文消息数量
-system_prompt = "你是热于助人的AI助手"
+system_prompt = "你是热于助人的AI助手"   # 系统提示词
 
 # 积分系统
 price = 0                               # 每次使用扣除的积分，0表示不扣除
