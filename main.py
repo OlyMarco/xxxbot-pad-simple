@@ -127,39 +127,6 @@ async def main():
     # 启动管理后台（提前启动）
     admin_server_thread = start_admin_server(config)
 
-    # 启动 linuxService - 现在已经在entrypoint.sh中启动
-    # try:
-    #     linux_service_path = Path("849/pad/linuxService")
-    #     if linux_service_path.exists():
-    #         logger.info("正在启动 linuxService...")
-    #         # 使用subprocess在后台启动linuxService
-    #         # 检测当前操作系统
-    #         import platform
-    #         start_options = {
-    #             'shell': True,
-    #             'stdout': subprocess.PIPE,
-    #             'stderr': subprocess.PIPE
-    #         }
-    #
-    #         # 如果是Windows系统，添加Windows特有的标志
-    #         if platform.system() == 'Windows':
-    #             start_options['creationflags'] = 0x08000000  # CREATE_NO_WINDOW
-    #
-    #         # 启动服务
-    #         service_process = subprocess.Popen(
-    #             str(linux_service_path),
-    #             **start_options
-    #         )
-    #
-    #         # 将进程对象存储在全局变量中，以便在程序退出时关闭
-    #         global linux_service_process
-    #         linux_service_process = service_process
-    #         logger.success("linuxService 启动成功，进程ID: {}", service_process.pid)
-    #     else:
-    #         logger.warning("linuxService 文件不存在: {}", linux_service_path)
-    # except Exception as e:
-    #     logger.error("linuxService 启动失败: {}", e)
-    #     logger.error(traceback.format_exc())
     logger.info("linuxService 已由 entrypoint.sh 启动")
 
     # 检查是否启用自动重启
@@ -256,7 +223,7 @@ def cleanup():
 
 if __name__ == "__main__":
     # 防止低版本Python运行
-    if sys.version_info.major != 3 and sys.version_info.minor != 11:
+    if sys.version_info.major != 3 and sys.version_info.minor < 11:
         print("请使用Python3.11")
         sys.exit(1)
     print(

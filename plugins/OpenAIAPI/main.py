@@ -48,7 +48,9 @@ class OpenAIAPI(PluginBase):
 
             # 获取模型配置
             self.default_model = plugin_config.get("default-model", "gpt-3.5-turbo")
-            self.available_models = plugin_config.get("available-models", ["gpt-3.5-turbo"])
+            self.available_models = plugin_config.get(
+                "available-models", ["gpt-3.5-turbo"]
+            )
 
             # 获取服务器配置
             self.port = plugin_config.get("port", 8100)
@@ -74,9 +76,14 @@ class OpenAIAPI(PluginBase):
 
             # 微信消息相关配置
             self.trigger_prefix = plugin_config.get("trigger_prefix", "/ai")
-            self.private_chat_all = plugin_config.get("private_chat_all", False)  # 私聊是否处理所有消息
+            self.private_chat_all = plugin_config.get(
+                "private_chat_all", False
+            )  # 私聊是否处理所有消息
             self.user_sessions = {}  # 用户会话记录
-            self.max_context_messages = plugin_config.get("max_context_messages", 10)  # 最大上下文消息数
+            self.max_context_messages = plugin_config.get(
+                "max_context_messages", 10
+            )  # 最大上下文消息数
+            self.system_prompt = plugin_config.get("system_prompt", "")  # 系统提示词
 
             # 初始化数据库
             self.db = XYBotDB()
@@ -85,7 +92,9 @@ class OpenAIAPI(PluginBase):
             self.admins = main_config.get("XYBot", {}).get("admins", [])
 
             # 初始化FastAPI应用
-            self.app = FastAPI(title="OpenAI API兼容服务", description="提供OpenAI API兼容的接口")
+            self.app = FastAPI(
+                title="OpenAI API兼容服务", description="提供OpenAI API兼容的接口"
+            )
 
             # 添加CORS中间件
             self.app.add_middleware(
@@ -118,17 +127,16 @@ class OpenAIAPI(PluginBase):
             """列出可用的模型"""
             models = []
             for model_id in self.available_models:
-                models.append({
-                    "id": model_id,
-                    "object": "model",
-                    "created": int(time.time()),
-                    "owned_by": "organization-owner"
-                })
+                models.append(
+                    {
+                        "id": model_id,
+                        "object": "model",
+                        "created": int(time.time()),
+                        "owned_by": "organization-owner",
+                    }
+                )
 
-            return {
-                "object": "list",
-                "data": models
-            }
+            return {"object": "list", "data": models}
 
         @self.app.post("/v1/chat/completions")
         async def create_chat_completion(request: Request):
@@ -138,12 +146,12 @@ class OpenAIAPI(PluginBase):
                 body = await request.json()
 
                 # 获取请求头中的API密钥
-                api_key = request.headers.get("Authorization", "").replace("Bearer ", "")
+                api_key = request.headers.get("Authorization", "").replace(
+                    "Bearer ", ""
+                )
 
                 # 构建转发请求
-                headers = {
-                    "Content-Type": "application/json"
-                }
+                headers = {"Content-Type": "application/json"}
 
                 # 如果配置了API密钥，使用配置的API密钥
                 if self.api_key:
@@ -180,7 +188,7 @@ class OpenAIAPI(PluginBase):
                         f"{self.base_url}/chat/completions",
                         headers=headers,
                         json=body,
-                        proxy=proxy
+                        proxy=proxy,
                     ) as response:
                         # 获取响应
                         response_json = await response.json()
@@ -189,7 +197,7 @@ class OpenAIAPI(PluginBase):
                         return Response(
                             content=json.dumps(response_json),
                             media_type="application/json",
-                            status_code=response.status
+                            status_code=response.status,
                         )
 
             except Exception as e:
@@ -202,9 +210,9 @@ class OpenAIAPI(PluginBase):
                         "error": {
                             "message": f"处理请求失败: {str(e)}",
                             "type": "server_error",
-                            "code": "internal_server_error"
+                            "code": "internal_server_error",
                         }
-                    }
+                    },
                 )
 
         @self.app.get("/")
@@ -214,7 +222,7 @@ class OpenAIAPI(PluginBase):
                 "message": "OpenAI API兼容服务已启动",
                 "version": self.version,
                 "models": self.available_models,
-                "documentation": "/docs"
+                "documentation": "/docs",
             }
 
         @self.app.get("/docs")
@@ -223,16 +231,13 @@ class OpenAIAPI(PluginBase):
             return {
                 "message": "访问 /docs 查看API文档",
                 "swagger_ui": "/docs",
-                "redoc": "/redoc"
+                "redoc": "/redoc",
             }
 
     async def _start_server(self):
         """启动API服务器"""
         config = uvicorn.Config(
-            app=self.app,
-            host=self.host,
-            port=self.port,
-            log_level="info"
+            app=self.app, host=self.host, port=self.port, log_level="info"
         )
         self.server = uvicorn.Server(config)
         await self.server.serve()
@@ -295,7 +300,9 @@ class OpenAIAPI(PluginBase):
             room_id = message.get("FromWxid", "")
             is_group = message.get("IsGroup", False)
 
-            logger.debug(f"OpenAIAPI处理@消息: content='{content}', from_id='{from_id}', room_id='{room_id}', is_group={is_group}")
+            logger.debug(
+                f"OpenAIAPI处理@消息: content='{content}', from_id='{from_id}', room_id='{room_id}', is_group={is_group}"
+            )
 
             if is_group:
                 # 移除@部分
@@ -304,8 +311,8 @@ class OpenAIAPI(PluginBase):
 
                 # 处理特殊空格字符 \u2005（四分之一em空格）
                 # 这个特殊空格常出现在微信@消息中
-                if '\u2005' in query:
-                    parts = query.split('\u2005', 1)
+                if "\u2005" in query:
+                    parts = query.split("\u2005", 1)
                     if len(parts) > 1:
                         # 保留第二部分（@名称后面的内容）
                         query = parts[1].strip()
@@ -315,15 +322,27 @@ class OpenAIAPI(PluginBase):
                 # 如果没有特殊空格，尝试其他方法
                 else:
                     # 尝试移除@机器人名称
-                    robot_names = ["机器人", "小助手", "Bot", "bot", "助手", "XXXBot", "xxxbot", "XXXBOT", "小球子", "🥥", "小x"]
+                    robot_names = [
+                        "机器人",
+                        "小助手",
+                        "Bot",
+                        "bot",
+                        "助手",
+                        "XXXBot",
+                        "xxxbot",
+                        "XXXBOT",
+                        "小球子",
+                        "🥥",
+                        "小x",
+                    ]
 
                     # 先检查是否以@开头
-                    if query.startswith('@'):
+                    if query.startswith("@"):
                         # 查找第一个空格
-                        space_index = query.find(' ')
+                        space_index = query.find(" ")
                         if space_index > 0:
                             # 移除@xxx部分
-                            query = query[space_index+1:].strip()
+                            query = query[space_index + 1 :].strip()
                             logger.debug(f"移除@前缀后的内容: '{query}'")
                         else:
                             # 如果没有空格，可能整个内容就是@xxx
@@ -340,10 +359,12 @@ class OpenAIAPI(PluginBase):
                     logger.debug("@消息内容为空，不处理")
                     return True
 
-                logger.info(f"处理群聊@消息，原始内容: '{content}'，处理后内容: '{query}'，发送者: {from_id}")
+                logger.info(
+                    f"处理群聊@消息，原始内容: '{content}'，处理后内容: '{query}'，发送者: {from_id}"
+                )
 
                 # 记录特殊字符的十六进制表示，便于调试
-                hex_content = ' '.join(hex(ord(c)) for c in content)
+                hex_content = " ".join(hex(ord(c)) for c in content)
                 logger.debug(f"@消息内容的十六进制表示: {hex_content}")
 
                 # 检查积分（如果需要）
@@ -352,11 +373,18 @@ class OpenAIAPI(PluginBase):
                     is_admin = from_id in self.admins
                     is_whitelist = await self.db.is_in_whitelist(from_id)
 
-                    if not ((is_admin and self.admin_ignore) or (is_whitelist and self.whitelist_ignore)):
+                    if not (
+                        (is_admin and self.admin_ignore)
+                        or (is_whitelist and self.whitelist_ignore)
+                    ):
                         # 检查用户积分
                         points = await self.db.get_user_points(from_id)
                         if points < self.price:
-                            await client.send_at_message(room_id, f"\n您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}", [from_id])
+                            await client.send_at_message(
+                                room_id,
+                                f"\n您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}",
+                                [from_id],
+                            )
                             return False  # 积分不足，已处理，阻止后续处理
 
                         # 扣除积分
@@ -373,7 +401,9 @@ class OpenAIAPI(PluginBase):
 
                 # 保持会话历史在限制范围内
                 if len(self.user_sessions[session_key]) > self.max_context_messages:
-                    self.user_sessions[session_key] = self.user_sessions[session_key][-self.max_context_messages:]
+                    self.user_sessions[session_key] = self.user_sessions[session_key][
+                        -self.max_context_messages :
+                    ]
 
                 # 向群发送处理中提示
                 await client.send_at_message(room_id, f"\n正在思考中...", [from_id])
@@ -390,7 +420,9 @@ class OpenAIAPI(PluginBase):
                     await client.send_at_message(room_id, f"\n{response}", [from_id])
                 else:
                     # 发送错误消息
-                    await client.send_at_message(room_id, f"\n抱歉，AI服务暂时不可用，请稍后再试。", [from_id])
+                    await client.send_at_message(
+                        room_id, f"\n抱歉，AI服务暂时不可用，请稍后再试。", [from_id]
+                    )
 
                 return False  # 已处理消息，阻止后续处理
             else:
@@ -418,7 +450,9 @@ class OpenAIAPI(PluginBase):
             room_id = message.get("FromWxid", "")  # 群聊时，FromWxid是群ID
             is_group = message.get("IsGroup", False)
 
-            logger.debug(f"OpenAIAPI处理消息: content='{content}', from_id='{from_id}', room_id='{room_id}', is_group={is_group}")
+            logger.debug(
+                f"OpenAIAPI处理消息: content='{content}', from_id='{from_id}', room_id='{room_id}', is_group={is_group}"
+            )
 
             if is_group:
                 # 群聊消息，检查是否是触发指令
@@ -426,7 +460,7 @@ class OpenAIAPI(PluginBase):
                     return True  # 不是本插件的命令，继续处理
 
                 # 提取实际查询内容
-                query = content[len(self.trigger_prefix):].strip()
+                query = content[len(self.trigger_prefix) :].strip()
                 if not query:
                     logger.debug("群聊消息: 触发前缀后内容为空")
                     return True  # 查询内容为空，继续处理
@@ -437,11 +471,17 @@ class OpenAIAPI(PluginBase):
                     is_admin = from_id in self.admins
                     is_whitelist = await self.db.is_in_whitelist(from_id)
 
-                    if not ((is_admin and self.admin_ignore) or (is_whitelist and self.whitelist_ignore)):
+                    if not (
+                        (is_admin and self.admin_ignore)
+                        or (is_whitelist and self.whitelist_ignore)
+                    ):
                         # 检查用户积分
                         points = await self.db.get_user_points(from_id)
                         if points < self.price:
-                            await client.send_text_message(room_id, f"@{message.get('from_nick', '')} 您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}")
+                            await client.send_text_message(
+                                room_id,
+                                f"@{message.get('from_nick', '')} 您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}",
+                            )
                             return False  # 积分不足，已处理，阻止后续处理
 
                         # 扣除积分
@@ -458,10 +498,12 @@ class OpenAIAPI(PluginBase):
 
                 # 保持会话历史在限制范围内
                 if len(self.user_sessions[session_key]) > self.max_context_messages:
-                    self.user_sessions[session_key] = self.user_sessions[session_key][-self.max_context_messages:]
+                    self.user_sessions[session_key] = self.user_sessions[session_key][
+                        -self.max_context_messages :
+                    ]
 
-                # 向群发送处理中提示
-                await client.send_text_message(room_id, f"@{message.get('from_nick', '')} 正在思考中...")
+                # # 向群发送处理中提示
+                # await client.send_text_message(room_id, f"@{message.get('from_nick', '')} 正在思考中...")
 
                 # 调用OpenAI API
                 response = await self._call_openai_api(self.user_sessions[session_key])
@@ -472,10 +514,15 @@ class OpenAIAPI(PluginBase):
                     self.user_sessions[session_key].append(assistant_message)
 
                     # 发送回复
-                    await client.send_text_message(room_id, f"@{message.get('from_nick', '')} {response}")
+                    await client.send_text_message(
+                        room_id, f"@{message.get('from_nick', '')} {response}"
+                    )
                 else:
                     # 发送错误消息
-                    await client.send_text_message(room_id, f"@{message.get('from_nick', '')} 抱歉，AI服务暂时不可用，请稍后再试。")
+                    await client.send_text_message(
+                        room_id,
+                        f"@{message.get('from_nick', '')} 抱歉，AI服务暂时不可用，请稍后再试。",
+                    )
 
                 return False  # 已处理消息，阻止后续处理
             else:
@@ -484,11 +531,13 @@ class OpenAIAPI(PluginBase):
 
                 # 判断是否是触发指令或私聊模式下所有消息都触发
                 is_trigger = content.startswith(self.trigger_prefix)
-                logger.debug(f"是否为触发指令: {is_trigger}, 触发前缀: '{self.trigger_prefix}', 私聊全处理模式: {self.private_chat_all}")
+                logger.debug(
+                    f"是否为触发指令: {is_trigger}, 触发前缀: '{self.trigger_prefix}', 私聊全处理模式: {self.private_chat_all}"
+                )
 
                 if is_trigger:
                     # 提取实际查询内容
-                    query = content[len(self.trigger_prefix):].strip()
+                    query = content[len(self.trigger_prefix) :].strip()
                     logger.debug(f"提取到指令后的查询内容: '{query}'")
                     if not query:
                         logger.debug("私聊消息: 触发前缀后内容为空")
@@ -513,15 +562,23 @@ class OpenAIAPI(PluginBase):
                     # 管理员和白名单用户免积分检查
                     is_admin = from_id in self.admins
                     is_whitelist = await self.db.is_in_whitelist(from_id)
-                    logger.debug(f"用户权限检查: is_admin={is_admin}, is_whitelist={is_whitelist}")
+                    logger.debug(
+                        f"用户权限检查: is_admin={is_admin}, is_whitelist={is_whitelist}"
+                    )
 
-                    if not ((is_admin and self.admin_ignore) or (is_whitelist and self.whitelist_ignore)):
+                    if not (
+                        (is_admin and self.admin_ignore)
+                        or (is_whitelist and self.whitelist_ignore)
+                    ):
                         # 检查用户积分
                         points = await self.db.get_user_points(from_id)
                         logger.debug(f"用户积分: {points}, 需要: {self.price}")
                         if points < self.price:
                             logger.debug("积分不足，发送通知")
-                            await client.send_text_message(from_id, f"您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}")
+                            await client.send_text_message(
+                                from_id,
+                                f"您的积分不足，无法使用AI服务。当前积分: {points}，需要积分: {self.price}",
+                            )
                             return False  # 积分不足，已处理，阻止后续处理
 
                         # 扣除积分
@@ -537,16 +594,22 @@ class OpenAIAPI(PluginBase):
                 # 添加用户消息到会话
                 user_message = {"role": "user", "content": query}
                 self.user_sessions[session_key].append(user_message)
-                logger.debug(f"添加用户消息到会话, 当前会话长度: {len(self.user_sessions[session_key])}")
+                logger.debug(
+                    f"添加用户消息到会话, 当前会话长度: {len(self.user_sessions[session_key])}"
+                )
 
                 # 保持会话历史在限制范围内
                 if len(self.user_sessions[session_key]) > self.max_context_messages:
-                    logger.debug(f"会话历史过长，裁剪到{self.max_context_messages}条消息")
-                    self.user_sessions[session_key] = self.user_sessions[session_key][-self.max_context_messages:]
+                    logger.debug(
+                        f"会话历史过长，裁剪到{self.max_context_messages}条消息"
+                    )
+                    self.user_sessions[session_key] = self.user_sessions[session_key][
+                        -self.max_context_messages :
+                    ]
 
                 # 向用户发送处理中提示
                 logger.debug("发送'正在思考中'提示")
-                await client.send_text_message(from_id, "正在思考中...")
+                # await client.send_text_message(from_id, "正在思考中...")
 
                 # 调用OpenAI API
                 logger.debug("调用OpenAI API")
@@ -565,7 +628,9 @@ class OpenAIAPI(PluginBase):
                 else:
                     # 发送错误消息
                     logger.debug("API调用失败，发送错误提示")
-                    await client.send_text_message(from_id, "抱歉，AI服务暂时不可用，请稍后再试。")
+                    await client.send_text_message(
+                        from_id, "抱歉，AI服务暂时不可用，请稍后再试。"
+                    )
 
                 return False  # 已处理消息，阻止后续处理
 
@@ -590,9 +655,7 @@ class OpenAIAPI(PluginBase):
             logger.debug(f"Starting OpenAI API call with {len(messages)} messages")
 
             # 构建请求头
-            headers = {
-                "Content-Type": "application/json"
-            }
+            headers = {"Content-Type": "application/json"}
 
             # 设置API密钥
             if self.api_key:
@@ -600,6 +663,13 @@ class OpenAIAPI(PluginBase):
                 logger.debug("Using configured API key")
             else:
                 logger.debug("No API key configured")
+
+            # 构造系统消息，添加当前日期和时间
+            current_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+            messages = [
+                {"role": "system", "content": f"当前时间: {current_time}"},
+                {"role": "system", "content": self.system_prompt},
+            ] + messages if self.system_prompt else messages
 
             # 构建请求体
             data = {
@@ -609,10 +679,12 @@ class OpenAIAPI(PluginBase):
                 "temperature": self.temperature,
                 "top_p": self.top_p,
                 "frequency_penalty": self.frequency_penalty,
-                "presence_penalty": self.presence_penalty
+                "presence_penalty": self.presence_penalty,
             }
 
-            logger.debug(f"Request data: model={data['model']}, max_tokens={data['max_tokens']}")
+            logger.debug(
+                f"Request data: model={data['model']}, max_tokens={data['max_tokens']}"
+            )
             logger.debug(f"API URL: {self.base_url}/chat/completions")
 
             # 设置代理
@@ -627,7 +699,7 @@ class OpenAIAPI(PluginBase):
                     f"{self.base_url}/chat/completions",
                     headers=headers,
                     json=data,
-                    proxy=proxy
+                    proxy=proxy,
                 ) as response:
                     # 获取响应
                     logger.debug(f"API response status: {response.status}")

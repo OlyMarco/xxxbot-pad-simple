@@ -1,5 +1,0 @@
-﻿{
-  "callback_url": "http://127.0.0.1:8088/wx849/callback",
-  "callback_key": "",
-  "callback_types": ["text", "image", "voice", "video", "file", "link", "at", "system"]
-}
