@@ -19,7 +19,7 @@
 ### 系统要求
 
 - 🐍 Python 3.11+ (建议使用 Conda 虚拟环境)
-- 🔋 Redis (已包含在项目中)
+- 🔋 Redis (Windows已包含在项目中，Linux需安装)
 - 🎥 FFmpeg (如需语音功能)
 
 ### Windows 安装步骤
@@ -65,12 +65,22 @@
    sudo yum install screen
    ```
 
-5. **赋予脚本执行权限**
+5. **如果 Redis 未安装，需要先安装**
+   ```bash
+   # Ubuntu/Debian
+   sudo apt-get update
+   sudo apt-get install redis-server
+
+   # CentOS/RHEL
+   sudo yum install redis
+   ```
+
+6. **赋予脚本执行权限**
    ```bash
    chmod +x entrypoint.sh exitpoint.sh
    ```
 
-6. **启动与退出**
+7. **启动与退出**
    ```bash
    # 启动所有服务
    ./entrypoint.sh
