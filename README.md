@@ -8,7 +8,7 @@
 
 ## 📝 项目背景
 
-本项目 fork 自 [XXXBot-Pad](https://github.com/NanSsye/xxxbot-pad)，由于 gewe 已停止更新，而 astrbot 暂时没有新的个人微信替代方案，因此基于 XXXBot 进行了精简和优化：
+本项目 fork 自 [XXXBot-Pad](https://github.com/NanSsye/xxxbot-pad)，由于 Gewechat 已停止更新，而 AstrBot 暂时没有新的个人微信替代方案，因此基于 XXXBot-Pad 进行了精简和优化：
 
 - ✅ 仅保留 849（iPad）协议登录方式，简化部署流程
 - ✅ 增加 OpenAI 插件兼容系统提示词，支持自定义对话体验
